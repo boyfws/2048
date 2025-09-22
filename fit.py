@@ -92,10 +92,3 @@ def fit(
     print(f"[score: {score_after:.4f} | wins: {wins_after:.2f}]")
 
 
-fit(  
-    batch_size=1024,
-    epoch_num=5,
-    games_per_epoch=100,
-    batch_num=5,
-    check_model_every_n_epochs=2, 
-)        
