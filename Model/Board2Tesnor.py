@@ -11,7 +11,7 @@ class Board2Tensor(nn.Module):
         """
         super().__init__()
         self.emb = nn.Embedding(
-            16, emb_dim
+            12, emb_dim
         )
 
 

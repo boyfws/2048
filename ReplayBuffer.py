@@ -22,5 +22,8 @@ class ReplayBuffer:
             torch.BoolTensor(dones)
         )
     
+    def clear(self):
+        self.buffer.clear()
+    
     def __len__(self):
         return len(self.buffer)
