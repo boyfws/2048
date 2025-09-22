@@ -46,8 +46,12 @@ def play_single_game(
         elif all(
             np.all(board.board == board.make_move(i))
             for i in range(1, 5)
-        ):
-            reward = -1
+        ):  
+            log_max_val = np.log2(np.max(board.board)) / 12 
+            # np.max(board.board) точно не 0 
+            # Мы получаем число от 0 до 1, на каком значении закончилась игра 
+
+            reward = -1 + log_max_val
             done = True 
             
         else:

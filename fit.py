@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch.optim as optim
 from play_game import play_single_game
 from Model import TorchModel
-from tqdm import tqdm 
+from tqdm.auto import tqdm 
 from ReplayBuffer import ReplayBuffer
 import torch 
 import numpy as np
@@ -24,22 +24,20 @@ def eval_model(
     return np.mean(games_res), np.sum(games_res == 2048)
 
 
-def fit(
-        
+def fit(  
     batch_size: int,
     epoch_num: int,
     games_per_epoch: int,
     batch_num: int,
+    check_model_every_n_epochs: int, 
     gamma: float = 0.99
-
 ) -> None:
     seed_all()
 
     model = TorchModel(10)
 
-    score_before, wins_before = eval_model(model=model, num_iter=5000)
-    print(f"Score before: {score_before:.4f}")
-    print(f"Wins before: {wins_before:.4f}")
+    score_before, wins_before = eval_model(model=model, num_iter=1000)
+    print(f"[epoch: {-1} | score: {score_before:.4f} | wins: {wins_before:.2f}]")
 
 
     optimizer = optim.Adam(
@@ -54,14 +52,15 @@ def fit(
     loss_fn = nn.MSELoss()
 
     for epoch_num in tqdm(range(epoch_num)):
+        model.eval()
         for _ in range(games_per_epoch):
             play_single_game(
                 model=model,
                 memory=memory
             )
 
-
-        for batch_id in tqdm(range(batch_num)):
+        model.train()
+        for batch_id in range(batch_num):
             states, actions, rewards, next_states, dones = memory.sample(batch_size)
             
             # Double DQN
@@ -80,8 +79,23 @@ def fit(
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
 
-    score_after, wins_after = eval_model(model=model, num_iter=5000)
-    print(f"Score after: {score_after:.4f}")
-    print(f"Wins after: {wins_after:.4f}")
 
-            
+        memory.clear()
+
+        if (epoch_num + 1) % check_model_every_n_epochs == 0:
+            model.eval()
+            score, wins = eval_model(model=model, num_iter=1000)
+
+            print(f"[epoch: {epoch_num + 1} | score: {score:.4f} | wins: {wins:.2f}]")
+
+    score_after, wins_after = eval_model(model=model, num_iter=1000)
+    print(f"[score: {score_after:.4f} | wins: {wins_after:.2f}]")
+
+
+fit(  
+    batch_size=1024,
+    epoch_num=5,
+    games_per_epoch=100,
+    batch_num=5,
+    check_model_every_n_epochs=2, 
+)        
